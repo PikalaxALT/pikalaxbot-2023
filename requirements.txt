@@ -1,2 +1,4 @@
-discord>=2.0.0
+discord>=2.2.2
 python-dotenv>=1.0.0
+aiopokeapi>=0.1.4
+asyncstdlib>=3.10.6

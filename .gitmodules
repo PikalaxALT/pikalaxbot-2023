@@ -1,0 +1,3 @@
+[submodule "fearow"]
+	path = fearow
+	url = https://github.com/PikalaxALT/fearow.git
