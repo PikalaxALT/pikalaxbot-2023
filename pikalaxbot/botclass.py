@@ -28,6 +28,9 @@ class PikalaxBOT(commands.Bot):
         self.pokeapi = aiopoke.AiopokeClient()
         for ext in PikalaxBOT._init_extensions:
             await self.load_extension(ext)
+        await self.sync_app_commands()
+    
+    async def sync_app_commands(self):
         for guild in PikalaxBOT._init_guilds:
             self.tree.copy_global_to(guild=guild)
             await self.tree.sync(guild=guild)
