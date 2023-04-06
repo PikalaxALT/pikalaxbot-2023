@@ -28,9 +28,11 @@ class AnagramView(discord.ui.View):
 
     @discord.ui.button(style=discord.ButtonStyle.danger, label='Terminate the game', emoji='🛑')
     async def stop_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer()
-        if await app_commands.checks.has_permissions(manage_messages=True)(interaction):
-            self.stop()
+        if interaction.permissions.manage_messages:
+            await interaction.response.defer()
+            self.stop(failed=None)
+        else:
+            await interaction.response.send_message('You do not have enough badges to cancel this game', ephemeral=True)
 
     def make_state_embed(self, *, name='???', description='???', colour=discord.Colour.blurple()):
         return (discord.Embed(title=name, description=description, colour=colour)
@@ -46,7 +48,7 @@ class AnagramView(discord.ui.View):
         if self.lives == 0:
             self.stop(failed=True)
     
-    def stop(self, *, failed: bool):
+    def stop(self, *, failed: bool | None):
         self.failed = failed
         super().stop()
     
@@ -56,7 +58,7 @@ class AnagramView(discord.ui.View):
         return (self.make_state_embed(
             name=self.solution_name, 
             description=random.choice([x for x in self.solution.flavor_text_entries if x.language.name == 'en']).flavor_text,
-            colour=discord.Colour.red() if self.failed else discord.Colour.green()
+            colour=discord.Colour.green() if self.failed is False else discord.Colour.red()
         ).set_image(url=(await discord.utils.get(self.solution.varieties, is_default=True).pokemon.fetch()).sprites.front_default.url))
 
 

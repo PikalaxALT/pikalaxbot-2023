@@ -27,9 +27,11 @@ class HangmanView(discord.ui.View):
 
     @discord.ui.button(style=discord.ButtonStyle.danger, label='Terminate the game', emoji='🛑')
     async def stop_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer()
-        if await app_commands.checks.has_permissions(manage_messages=True)(interaction):
-            self.stop()
+        if interaction.permissions.manage_messages:
+            await interaction.response.defer()
+            self.stop(failed=None)
+        else:
+            await interaction.response.send_message('You do not have enough badges to cancel this game', ephemeral=True)
 
     def make_state_embed(self, *, name='???', description='???', colour=discord.Colour.blurple()):
         return (discord.Embed(title=name, description=description, colour=colour)
@@ -44,7 +46,7 @@ class HangmanView(discord.ui.View):
                 self.revealed = [c if c == letter or d != '_' else '_' for c, d in zip(self.solution_clean, self.revealed)]
                 if self.revealed == list(self.solution_clean):
                     self.stop(failed=False)
-                    return
+                return
         elif letter == self.solution_clean:
             self.stop(failed=False)
             return
@@ -52,7 +54,7 @@ class HangmanView(discord.ui.View):
         if self.lives == 0:
             self.stop(failed=True)
     
-    def stop(self, *, failed: bool):
+    def stop(self, *, failed: bool | None):
         self.failed = failed
         super().stop()
     
@@ -62,7 +64,7 @@ class HangmanView(discord.ui.View):
         return (self.make_state_embed(
             name=self.solution_name, 
             description=random.choice([x for x in self.solution.flavor_text_entries if x.language.name == 'en']).flavor_text,
-            colour=discord.Colour.red() if self.failed else discord.Colour.green()
+            colour=discord.Colour.green() if self.failed is False else discord.Colour.red()
         ).set_image(url=(await discord.utils.get(self.solution.varieties, is_default=True).pokemon.fetch()).sprites.front_default.url))
 
 
@@ -95,10 +97,12 @@ async def setup(bot: PikalaxBOT):
         await interaction.response.send_message('Playing Hangman! Anyone can join in! Use the text field below to play!', view=view, embed=view.make_state_embed())
         if await view.wait():
             content = f'Time\'s up, you did not guess in time. The correct answer was: {view.solution_name}'
-        elif view.failed:
+        elif view.failed is True:
             content = f'Too bad! You failed to guess the Pokemon. The correct answer was: {view.solution_name}'
-        else:
+        elif view.failed is False:
             content = f'Whew, the man was saved! The correct answer was: {view.solution_name}'
+        else:
+            content = 'The game was cancelled'
         embed = await view.set_done()
         await interaction.edit_original_response(view=None, content=content, embed=embed)
     
