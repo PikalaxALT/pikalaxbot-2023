@@ -1,7 +1,7 @@
 import discord
 import traceback
 from discord import app_commands
-from .checks import is_bot_owner
+from ..app_commands_util.checks import is_bot_owner
 from ..botclass import PikalaxBOT
 
 
@@ -17,9 +17,15 @@ async def setup(bot: PikalaxBOT):
     @bot.tree.command()
     async def reload(interaction: discord.Interaction, extension: str):
         """Reload an extension on-the-fly"""
-        await bot.reload_extension(extension)
+        extension = extension.lower()
+        await bot.reload_extension(f'pikalaxbot.ext.{extension}')
         await bot.sync_app_commands()
-        await interaction.response.send_message(f'Reloaded extension {extension}', ephemeral=True)
+        await interaction.response.send_message(f'Reloaded extension `{extension}`', ephemeral=True)
+    
+    @app_commands.check(is_bot_owner)
+    @reload.autocomplete('extension')
+    async def reload_autocomplete(interaction: discord.Interaction, current: str):
+        return [app_commands.Choice(name=ext.rsplit('.', 1)[-1], value=ext.rsplit('.', 1)[-1]) for ext in bot.extensions if ext.lower().startswith(current.lower())][:25]
     
     @reload.error
     async def reload_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
