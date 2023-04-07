@@ -3,6 +3,7 @@ from discord.ext import commands
 import dotenv
 import aiopoke
 import pathlib
+import asyncio
 from asyncstdlib import functools as aiofunctools
 
 class PikalaxBOT(commands.Bot):
@@ -27,9 +28,10 @@ class PikalaxBOT(commands.Bot):
 
     async def setup_hook(self):
         self.pokeapi = aiopoke.AiopokeClient()
-        for ext in PikalaxBOT._init_extensions:
-            await self.load_extension(f'pikalaxbot.ext.{ext}')
-        await self.sync_app_commands()
+        del self.natdex
+        del self.pokeapi_language
+        await asyncio.wait(self.load_extension(f'pikalaxbot.ext.{ext}' for ext in self._init_extensions))
+        # await self.sync_app_commands()
     
     async def sync_app_commands(self):
         for guild in PikalaxBOT._init_guilds:

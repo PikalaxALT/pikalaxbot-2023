@@ -108,8 +108,7 @@ async def setup(bot: PikalaxBOT):
     
     @hangman.error
     async def hangman_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
-        if isinstance(error, app_commands.CommandInvokeError):
-            error = error.original
+        error = getattr(error, 'original', error)
         embed = discord.Embed(
             colour=discord.Colour.red(),
             title=error.__class__.__name__,
